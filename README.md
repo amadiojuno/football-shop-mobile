@@ -51,3 +51,19 @@ Tugas Individu 7
 6. Jelaskan konsep "hot reload" di Flutter dan bagaimana bedanya dengan "hot restart".
     - Hot reload: reload kode dan mempertahankan state runtime, cepat untuk perubahan UI/logika kecil.
     - Hot restart: muat ulang seluruh aplikasi dari awal, state akan hilang, dipakai jika perubahan struktur inisialisasi atau state global.
+
+Tugas Individu 8
+1. Jelaskan perbedaan antara Navigator.push() dan Navigator.pushReplacement() pada Flutter. Dalam kasus apa sebaiknya masing-masing digunakan pada aplikasi Football Shop kamu?
+    - Navigator.push(): Menambahkan halaman baru ke atas stack navigasi, halaman sebelumnya tetap ada di stack, user bisa kembali ke halaman sebelumnya dengan tombol back, Untuk navigasi dari menu utama ke halaman semua produk dan tambah produk, user perlu bisa kembali ke menu
+    - Navigator.pushReplacement(): Mengganti halaman saat ini dengan halaman baru, halaman sebelumnya dihapus dari stack, user tidak bisa kembali ke halaman sebelumnya, untuk logout atau setelah submit form berhasil dan user tidak perlu kembali ke halaman sebelumnya
+2. Bagaimana kamu memanfaatkan hierarchy widget seperti Scaffold, AppBar, dan Drawer untuk membangun struktur halaman yang konsisten di seluruh aplikasi?
+    - Scaffold sebagai container utama di semua halaman
+    - AppBar untuk menampilkan judul aplikasi "BeliBola" dengan warna konsisten
+    - Drawer navigasi antar halaman
+3. Dalam konteks desain antarmuka, apa kelebihan menggunakan layout widget seperti Padding, SingleChildScrollView, dan ListView saat menampilkan elemen-elemen form? Berikan contoh penggunaannya dari aplikasi kamu.
+    - Padding: Memberikan spacing konsisten
+    - SingleChildScrollView: Menghindari overflow saat keyboard muncul atau konten panjang
+    - ListView: Efisien untuk list panjang dengan lazy loading
+    - Menggunakan GridView.count untuk untuk menampilkan items dalam grid, yang serupa dengan ListView namun dalam format grid
+4. Bagaimana kamu menyesuaikan warna tema agar aplikasi Football Shop memiliki identitas visual yang konsisten dengan brand toko?
+    - Theme.of(context).colorScheme.primary di AppBar di menu.dart, sehingga semua halaman akan mengikuti tema yang sama.
