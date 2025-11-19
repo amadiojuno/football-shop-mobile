@@ -67,3 +67,130 @@ Tugas Individu 8
     - Menggunakan GridView.count untuk untuk menampilkan items dalam grid, yang serupa dengan ListView namun dalam format grid
 4. Bagaimana kamu menyesuaikan warna tema agar aplikasi Football Shop memiliki identitas visual yang konsisten dengan brand toko?
     - Theme.of(context).colorScheme.primary di AppBar di menu.dart, sehingga semua halaman akan mengikuti tema yang sama.
+
+Tugas Individu 9
+ 1. Jelaskan mengapa kita perlu membuat model Dart saat mengambil/mengirim data JSON? Apa konsekuensinya jika langsung memetakan Map<String, dynamic> tanpa model (terkait validasi tipe, null-safety, maintainability)?
+    - Model mengubah JSON mentah menjadi objek Dart yang aman. Tanpa model, kita kehilangan fitur type-safety (rawan crash karena salah tipe data), null-safety, dan autocomplete kode, membuat aplikasi sulit dikelola (maintainability rendah).
+ 2. Apa fungsi package http dan CookieRequest? Jelaskan perbedaan peran http vs CookieRequest.
+    - http: Library standar untuk kirim request (GET/POST), tapi tidak menyimpan sesi (stateless).
+    - CookieRequest: Library tambahan yang membungkus http untuk menyimpan cookies/session secara otomatis, agar status login pengguna tetap terjaga antar-request.
+ 3. Jelaskan mengapa instance CookieRequest perlu untuk dibagikan ke semua komponen di aplikasi Flutter.
+    - Agar status login (session cookie) konsisten di seluruh aplikasi. Jika dibuat instance baru di setiap halaman, cookie hilang, dan pengguna dianggap logout oleh server.
+ 4. Jelaskan konfigurasi konektivitas yang diperlukan agar Flutter dapat berkomunikasi dengan Django. Mengapa kita perlu menambahkan 10.0.2.2 pada ALLOWED_HOSTS, mengaktifkan CORS dan pengaturan SameSite/cookie, dan menambahkan izin akses internet di Android? Apa yang akan terjadi jika konfigurasi tersebut tidak dilakukan dengan benar?
+    - 10.0.2.2: Agar emulator Android bisa akses localhost komputer.
+    - CORS & SameSite: Agar server Django mengizinkan request dari "domain" luar (aplikasi mobile).
+    - Izin Internet: Agar Android mengizinkan aplikasi mengakses jaringan.
+    - Tanpa ini: Koneksi gagal atau ditolak server.
+ 5. Jelaskan mekanisme pengiriman data mulai dari input hingga dapat ditampilkan pada Flutter.
+    - Input di Form Flutter 
+    - JSON 
+    - POST ke Django 
+    - Simpan di DB 
+    - GET dari Django 
+    - JSON 
+    - Objek Dart (Model) 
+    - Tampil di UI Flutter.
+ 6. Jelaskan mekanisme autentikasi dari login, register, hingga logout. Mulai dari input data akun pada Flutter ke Django hingga selesainya proses autentikasi oleh Django dan tampilnya menu pada Flutter.
+    - Register:
+        - Input data di Flutter 
+        - Kirim ke Django 
+        - Django buat akun di DB 
+        - Sukses 
+        - Flutter arahkan ke halaman Login
+    - Login:
+        - Input username/password di Flutter 
+        - Kirim via CookieRequest 
+        - Django validasi & kirim Cookie Session 
+        - CookieRequest simpan Cookie (status logged in) 
+        - Flutter pindah ke Menu Utama
+    - Logout:
+        - Klik Logout
+        - Request ke Django bawa Cookie 
+        - Django hapus sesi server 
+        - Flutter hapus Cookie lokal 
+        - Kembali ke halaman Login
+7. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step!
+    - Menyiapkan autentikasi di Django**  
+    - Menambahkan app `authentication` ke `INSTALLED_APPS`.  
+    - Membuat URL `/auth/login/`, `/auth/register/`, dan `/auth/logout/` di `authentication/urls.py`.  
+    - Membuat view:
+        - `register`: menerima JSON `username`, `password1`, `password2`, validasi, lalu membuat `User` baru dan membalas `JsonResponse` status sukses/gagal.  
+        - `login`: memakai `authenticate` dan `login` dari Django, jika benar mengirim `JsonResponse` berisi `status`, `message`, `username`, dan menyimpan session di cookie.  
+        - `logout`: memanggil `logout` Django, menghapus sesi, lalu kirim JSON status.  
+    - Mengaktifkan CORS (`django-cors-headers`), mengatur `ALLOWED_HOSTS` (termasuk `10.0.2.2`), serta pengaturan cookie (`SESSION_COOKIE_SAMESITE`, dll.) agar bisa diakses dari Flutter.
+
+    - Membuat model Django dan endpoint JSON**  
+    - Di `main/models.py` membuat model `Product` dengan field seperti `name`, `price`, `description`, `thumbnail`, `category`, `is_featured`, dan `user` (ForeignKey ke `User`).  
+    - Membuat view JSON:
+        - `show_json`: mengembalikan semua produk.  
+        - `show_json_by_id`: detail satu produk.  
+        - `show_json_my_products`: `Product.objects.filter(user=request.user)` untuk hanya produk milik user login.  
+    - Mendaftarkan path ini di `main/urls.py`, misalnya `/json/`, `/json/<id>/`, `/json/my-products/`.
+
+    - Membuat model Dart sesuai model Django**  
+    - Di Flutter, membuat file `lib/models/product_entry.dart` dengan class `ProductEntry` yang memetakan field Django (`name`, `price`, `description`, `thumbnail`, `category`, `is_featured`, dll.).  
+    - Menambahkan `factory ProductEntry.fromJson(Map<String, dynamic> json)` untuk mengubah JSON dari Django menjadi objek Dart.  
+    - Menambahkan `toJson()` jika perlu mengirim data kembali ke Django.
+
+    - Membuat halaman Register di Flutter 
+    - Membuat `RegisterPage` (`lib/screens/register.dart`) dengan tiga `TextEditingController` (username, password, konfirmasi).  
+    - Membungkus input di `Form` dengan validator sederhana (tidak kosong, password sama).  
+    - Mengambil instance `CookieRequest` dari `Provider`.  
+    - Saat tombol Register ditekan:
+        - Memanggil `request.postJson("http://10.0.2.2:8000/auth/register/", jsonEncode({...}))`.  
+        - Jika `response['status'] == true`, tampilkan `SnackBar` dan `Navigator.pushReplacement` ke `LoginPage`.  
+        - Jika gagal, tampilkan pesan error di dialog/SnackBar.
+
+    - Membuat halaman Login di Flutter
+    - Membuat `LoginPage` (`lib/screens/login.dart`) dengan username & password field.  
+    - Menggunakan `CookieRequest.login("http://10.0.2.2:8000/auth/login/", {...})`.  
+    - Jika login berhasil (`request.loggedIn == true`):
+        - Menampilkan pesan selamat datang berdasarkan `response['message']`.  
+        - `Navigator.pushReplacement` ke `MyHomePage` (menu utama).  
+    - Jika gagal, menampilkan dialog dengan pesan error dari backend.
+
+    - Membagi instance CookieRequest ke seluruh aplikasi
+    - Di `main.dart`, membungkus `MaterialApp` dengan `Provider(create: (_) => CookieRequest())`.  
+    - Di semua halaman (login, register, list produk, dll.) mengambil `CookieRequest` dari `context.watch<CookieRequest>()`, sehingga cookie session Django tersimpan dan dipakai otomatis di setiap request.  
+    - Menambahkan menu Logout di `LeftDrawer` yang memanggil `request.logout("http://10.0.2.2:8000/auth/logout/")`, lalu mengarahkan kembali ke `LoginPage`.
+
+    - Membuat halaman daftar semua item (All Products)
+    - Membuat `ProductEntryListPage` (`lib/screens/product_entry_list.dart`).  
+    - Menulis fungsi `fetchProducts(CookieRequest request)` yang:
+        - Memanggil `request.get("http://10.0.2.2:8000/json/")`.  
+        - Mengonversi list JSON ke list `ProductEntry` dengan `ProductEntry.fromJson`.  
+    - Menggunakan `FutureBuilder<List<ProductEntry>>` di `build`:
+        - Menampilkan loading saat future belum selesai.  
+        - Jika kosong, menampilkan teks bahwa belum ada produk.  
+        - Jika ada data, menampilkan grid/list `ProductEntryCard`.  
+    - Di `ProductEntryCard` (`lib/widgets/product_entry_card.dart`), menampilkan minimal:
+        - `name`  
+        - `price`  
+        - potongan `description`  
+        - gambar `thumbnail` dengan `Image.network`  
+        - `category`  
+        - label `is_featured` (misalnya chip “Featured”).
+
+    - Membuat halaman detail item
+    - Membuat `ProductDetailPage` (`lib/screens/product_detail.dart`) yang menerima `ProductEntry product` lewat konstruktor.  
+    - Di `build`, menampilkan semua field produk:
+        - Gambar `thumbnail`.  
+        - `name`, `brand`, `category`.  
+        - `price`, `description`, `rating`, `views`, `is_featured`, dsb.  
+    - Menambahkan tombol back:
+        - Mengandalkan tombol back default `AppBar` (`Navigator.pop(context)`), atau  
+        - Tombol `ElevatedButton` “Back to Products” di bagian bawah.  
+    - Menghubungkan dengan halaman list:
+        - Di `ProductEntryListPage`, saat card ditekan, gunakan  
+        `Navigator.push(MaterialPageRoute(builder: (_) => ProductDetailPage(product: product)))`.
+
+   - Membuat halaman daftar item milik user (My Products)
+   - Membuat `MyProductListPage` (`lib/screens/my_product_list.dart`).  
+   - Menulis `fetchMyProducts(CookieRequest request)` yang:
+        - Memanggil `request.get("http://10.0.2.2:8000/json/my-products/")`.  
+        - Mengonversi hasilnya ke `List<ProductEntry>` seperti sebelumnya.  
+   - Menampilkan hasilnya dengan `FutureBuilder` + `ProductEntryCard`.  
+   - Menambahkan navigasi ke halaman ini:
+        - Dari menu utama (`menu.dart`): item “My Products” pada grid.  
+        - Dari `LeftDrawer`: `ListTile` yang `onTap`-nya `Navigator.push` ke `MyProductListPage`.  
+   - Karena endpoint menggunakan `request.user`, hanya produk milik user login yang muncul, sehingga filter “produk milik pengguna yang login” terpenuhi.

@@ -6,20 +6,17 @@ import 'package:football_shop/widgets/product_entry_card.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 
-class ProductEntryListPage extends StatefulWidget {
-  const ProductEntryListPage({super.key});
+class MyProductListPage extends StatefulWidget {
+  const MyProductListPage({super.key});
 
   @override
-  State<ProductEntryListPage> createState() => _ProductEntryListPageState();
+  State<MyProductListPage> createState() => _MyProductListPageState();
 }
 
-class _ProductEntryListPageState extends State<ProductEntryListPage> {
-  Future<List<ProductEntry>> fetchProducts(CookieRequest request) async {
-    // TODO: Replace the URL with your app's URL and don't forget to add a trailing slash (/)!
-    // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
-    // If you using chrome,  use URL http://localhost:8000
-    
-    final response = await request.get('http://localhost:8000/json/');
+class _MyProductListPageState extends State<MyProductListPage> {
+  Future<List<ProductEntry>> fetchMyProducts(CookieRequest request) async {
+    // Fetch products created by the current logged-in user
+    final response = await request.get('http://localhost:8000/json/my-products/');
     
     // Decode response to json format
     var data = response;
@@ -39,24 +36,45 @@ class _ProductEntryListPageState extends State<ProductEntryListPage> {
     final request = context.watch<CookieRequest>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Products'),
+        title: const Text('My Products'),
       ),
       drawer: const LeftDrawer(),
       body: FutureBuilder(
-        future: fetchProducts(request),
+        future: fetchMyProducts(request),
         builder: (context, AsyncSnapshot snapshot) {
           if (snapshot.data == null) {
             return const Center(child: CircularProgressIndicator());
           } else {
-            if (!snapshot.hasData) {
-              return const Column(
-                children: [
-                  Text(
-                    'There are no products available yet.',
-                    style: TextStyle(fontSize: 20, color: Color(0xff59A5D8)),
-                  ),
-                  SizedBox(height: 8),
-                ],
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 80,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'You haven\'t created any products yet.',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Start by adding your first product!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[500],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               );
             } else {
               return ListView.builder(

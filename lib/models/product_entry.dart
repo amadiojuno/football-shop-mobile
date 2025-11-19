@@ -35,19 +35,40 @@ class ProductEntry {
         required this.userId,
     });
 
-    factory ProductEntry.fromJson(Map<String, dynamic> json) => ProductEntry(
-        id: json["id"],
-        name: json["name"],
-        brand: json["brand"],
-        price: json["price"],
-        description: json["description"],
-        rating: json["rating"]?.toDouble(),
-        views: json["views"],
-        thumbnail: json["thumbnail"],
-        category: json["category"],
-        isFeatured: json["is_featured"],
-        userId: json["user_id"],
-    );
+    factory ProductEntry.fromJson(Map<String, dynamic> json) {
+        // Check if response is from Django serializer (has 'model', 'pk', 'fields')
+        if (json.containsKey('fields')) {
+            final fields = json['fields'] as Map<String, dynamic>;
+            return ProductEntry(
+                id: json["pk"].toString(),
+                name: fields["name"] ?? "",
+                brand: fields["brand"] ?? "",
+                price: fields["price"] ?? 0,
+                description: fields["description"] ?? "",
+                rating: (fields["rating"] ?? 0).toDouble(),
+                views: fields["views"] ?? 0,
+                thumbnail: fields["thumbnail"] ?? "",
+                category: fields["category"] ?? "",
+                isFeatured: fields["is_featured"] ?? false,
+                userId: fields["user"],
+            );
+        }
+        
+        // Otherwise, parse direct format
+        return ProductEntry(
+            id: json["id"] ?? "",
+            name: json["name"] ?? "",
+            brand: json["brand"] ?? "",
+            price: json["price"] ?? 0,
+            description: json["description"] ?? "",
+            rating: (json["rating"] ?? 0).toDouble(),
+            views: json["views"] ?? 0,
+            thumbnail: json["thumbnail"] ?? "",
+            category: json["category"] ?? "",
+            isFeatured: json["is_featured"] ?? false,
+            userId: json["user_id"],
+        );
+    }
 
     Map<String, dynamic> toJson() => {
         "id": id,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_shop/screens/productlist_form.dart';
 import 'package:football_shop/screens/menu.dart';
 import 'package:football_shop/screens/product_entry_list.dart';
+import 'package:football_shop/screens/my_product_list.dart';
 import 'package:football_shop/screens/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -45,6 +46,14 @@ class ItemCard extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const ProductEntryListPage()
+                  ),
+              );
+            }
+            else if (item.name == "My Products") {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MyProductListPage()
                   ),
               );
             }
